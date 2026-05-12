@@ -25,7 +25,7 @@
             </el-menu-item>
           </el-sub-menu>
           
-          <el-sub-menu index="knowledge">
+          <el-sub-menu index="knowledge-group">
             <template #title>
               <el-icon><component :is="icons.BookOpen" /></el-icon>
               <span>知识管理</span>
@@ -86,30 +86,39 @@
 </template>
 
 <script setup>
-import { ref, markRaw } from 'vue'
-import { Cpu, Box, BookOpen, FileText, FolderOpen, FlowChart, CheckSquare, Template, User, Building, BarChart, PieChart, Wrench } from '@element-plus/icons-vue'
+import { ref, markRaw, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { Cpu, Box, Notebook, Files, Folder, DataLine, Checked, CopyDocument, User, Briefcase, TrendCharts, PieChart, Edit } from '@element-plus/icons-vue'
+
+const router = useRouter()
+const route = useRoute()
 
 const icons = {
   Cpu: markRaw(Cpu),
   Box: markRaw(Box),
-  BookOpen: markRaw(BookOpen),
-  FileText: markRaw(FileText),
-  FolderOpen: markRaw(FolderOpen),
-  FlowChart: markRaw(FlowChart),
-  CheckSquare: markRaw(CheckSquare),
-  Template: markRaw(Template),
+  BookOpen: markRaw(Notebook),
+  FileText: markRaw(Files),
+  FolderOpen: markRaw(Folder),
+  FlowChart: markRaw(DataLine),
+  CheckSquare: markRaw(Checked),
+  Template: markRaw(CopyDocument),
   User: markRaw(User),
-  Building: markRaw(Building),
-  BarChart: markRaw(BarChart),
+  Building: markRaw(Briefcase),
+  BarChart: markRaw(TrendCharts),
   PieChart: markRaw(PieChart),
-  Wrench: markRaw(Wrench)
+  Wrench: markRaw(Edit)
 }
 
 const activeMenu = ref('hardware')
 
 const handleMenuSelect = (index) => {
   activeMenu.value = index
+  router.push('/' + index)
 }
+
+onMounted(() => {
+  activeMenu.value = route.name || 'hardware'
+})
 </script>
 
 <style>

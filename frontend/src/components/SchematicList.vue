@@ -89,10 +89,10 @@
 
 <script setup>
 import { ref, reactive, markRaw, onMounted, watch } from 'vue'
-import { Plus, FileText } from '@element-plus/icons-vue'
+import { Plus, Files } from '@element-plus/icons-vue'
 import { hardwareAPI } from '../api'
 
-const icons = { Plus: markRaw(Plus), FileText: markRaw(FileText) }
+const icons = { Plus: markRaw(Plus), FileText: markRaw(Files) }
 
 const projects = ref([])
 const schematics = ref([])

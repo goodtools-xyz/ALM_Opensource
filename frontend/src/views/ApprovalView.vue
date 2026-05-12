@@ -4,7 +4,7 @@
     <el-tabs v-model="activeTab" type="border-card">
       <el-tab-pane label="审批流程" name="flows">
         <div class="tab-content">
-          <el-button type="primary" @click="showFlowModal = true">创建流程</el-button>
+          <el-button type="primary" @click="openFlowModal()">创建流程</el-button>
           <el-table :data="flows" border style="width: 100%;">
             <el-table-column prop="flowId" label="流程ID" width="120" />
             <el-table-column prop="name" label="名称" />
@@ -48,11 +48,68 @@
         </div>
       </el-tab-pane>
     </el-tabs>
+
+    <!-- 流程弹窗 -->
+    <el-dialog :title="flowForm.flowId ? '编辑流程' : '创建流程'" :visible.sync="showFlowModal" width="500px">
+      <el-form :model="flowForm" label-width="80px">
+        <el-form-item label="名称" prop="name">
+          <el-input v-model="flowForm.name" />
+        </el-form-item>
+        <el-form-item label="类型" prop="type">
+          <el-select v-model="flowForm.type">
+            <el-option label="立项审批" value="PROJECT_APPROVAL" />
+            <el-option label="文档审批" value="DOCUMENT_APPROVAL" />
+            <el-option label="采购审批" value="PURCHASE_APPROVAL" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input v-model="flowForm.description" type="textarea" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="flowForm.status">
+            <el-option label="启用" value="ACTIVE" />
+            <el-option label="禁用" value="INACTIVE" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="showFlowModal = false">取消</el-button>
+        <el-button type="primary" @click="saveFlow()">保存</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 步骤管理弹窗 -->
+    <el-dialog title="步骤管理" :visible.sync="showStepModal" width="500px">
+      <el-form :model="stepForm" label-width="80px">
+        <el-form-item label="流程ID" prop="flowId">
+          <el-input v-model="stepForm.flowId" disabled />
+        </el-form-item>
+        <el-form-item label="步骤名称" prop="stepName">
+          <el-input v-model="stepForm.stepName" />
+        </el-form-item>
+        <el-form-item label="审批人" prop="approver">
+          <el-input v-model="stepForm.approver" />
+        </el-form-item>
+        <el-form-item label="步骤顺序" prop="stepOrder">
+          <el-input v-model="stepForm.stepOrder" type="number" />
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="stepForm.stepType">
+            <el-option label="审批" value="APPROVAL" />
+            <el-option label="抄送" value="CC" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="showStepModal = false">取消</el-button>
+        <el-button type="primary" @click="saveStep()">保存</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, reactive } from 'vue'
 import { approvalAPI } from '../api'
 
 const activeTab = ref('flows')
@@ -60,6 +117,24 @@ const flows = ref([])
 const tasks = ref([])
 const taskStatus = ref('')
 const showFlowModal = ref(false)
+const showStepModal = ref(false)
+
+const flowForm = reactive({
+  flowId: null,
+  name: '',
+  type: 'PROJECT_APPROVAL',
+  description: '',
+  status: 'ACTIVE'
+})
+
+const stepForm = reactive({
+  stepId: null,
+  flowId: '',
+  stepName: '',
+  approver: '',
+  stepOrder: 1,
+  stepType: 'APPROVAL'
+})
 
 const loadFlows = async () => {
   const response = await approvalAPI.getFlows()
@@ -90,8 +165,42 @@ const rejectTask = async (id) => {
   loadTasks()
 }
 
-const manageSteps = (row) => {
+const openFlowModal = () => {
+  flowForm.flowId = null
+  flowForm.name = ''
+  flowForm.type = 'PROJECT_APPROVAL'
+  flowForm.description = ''
+  flowForm.status = 'ACTIVE'
   showFlowModal.value = true
+}
+
+const saveFlow = async () => {
+  if (flowForm.flowId) {
+    await approvalAPI.updateFlow(flowForm.flowId, flowForm)
+  } else {
+    await approvalAPI.createFlow(flowForm)
+  }
+  showFlowModal.value = false
+  loadFlows()
+}
+
+const manageSteps = (row) => {
+  stepForm.stepId = null
+  stepForm.flowId = row.flowId
+  stepForm.stepName = ''
+  stepForm.approver = ''
+  stepForm.stepOrder = 1
+  stepForm.stepType = 'APPROVAL'
+  showStepModal.value = true
+}
+
+const saveStep = async () => {
+  if (stepForm.stepId) {
+    await approvalAPI.updateStep(stepForm.stepId, stepForm)
+  } else {
+    await approvalAPI.createStep(stepForm)
+  }
+  showStepModal.value = false
 }
 
 const viewTask = (row) => {

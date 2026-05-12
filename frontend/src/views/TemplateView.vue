@@ -4,7 +4,7 @@
     <el-tabs v-model="activeTab" type="border-card">
       <el-tab-pane label="任务模板" name="templates">
         <div class="tab-content">
-          <el-button type="primary" @click="showTemplateModal = true">创建模板</el-button>
+          <el-button type="primary" @click="openTemplateModal()">创建模板</el-button>
           <el-table :data="templates" border style="width: 100%;">
             <el-table-column prop="templateId" label="模板ID" width="120" />
             <el-table-column prop="name" label="名称" />
@@ -29,7 +29,7 @@
             <el-option label="全部" value="" />
             <el-option v-for="t in templates" :key="t.templateId" :label="t.name" :value="t.templateId" />
           </el-select>
-          <el-button type="primary" @click="showFieldModal = true">添加字段</el-button>
+          <el-button type="primary" @click="openFieldModal()">添加字段</el-button>
           <el-table :data="fields" border style="width: 100%;">
             <el-table-column prop="fieldId" label="字段ID" width="120" />
             <el-table-column prop="fieldName" label="字段名" />
@@ -47,6 +47,78 @@
         </div>
       </el-tab-pane>
     </el-tabs>
+
+    <!-- 模板弹窗 -->
+    <el-dialog :title="templateForm.templateId ? '编辑模板' : '创建模板'" :visible.sync="showTemplateModal" width="450px">
+      <el-form :model="templateForm" label-width="80px">
+        <el-form-item label="名称" prop="name">
+          <el-input v-model="templateForm.name" />
+        </el-form-item>
+        <el-form-item label="分类" prop="category">
+          <el-select v-model="templateForm.category">
+            <el-option label="硬件" value="HARDWARE" />
+            <el-option label="结构" value="STRUCTURE" />
+            <el-option label="文档" value="DOCUMENT" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="项目类型" prop="projectType">
+          <el-select v-model="templateForm.projectType">
+            <el-option label="新项目" value="NEW_PROJECT" />
+            <el-option label="迭代" value="ITERATION" />
+            <el-option label="变更" value="CHANGE" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input v-model="templateForm.description" type="textarea" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="templateForm.status">
+            <el-option label="启用" value="ACTIVE" />
+            <el-option label="禁用" value="INACTIVE" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="showTemplateModal = false">取消</el-button>
+        <el-button type="primary" @click="saveTemplate()">保存</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 字段弹窗 -->
+    <el-dialog :title="fieldForm.fieldId ? '编辑字段' : '添加字段'" :visible.sync="showFieldModal" width="450px">
+      <el-form :model="fieldForm" label-width="80px">
+        <el-form-item label="所属模板" prop="templateId">
+          <el-select v-model="fieldForm.templateId">
+            <el-option v-for="t in templates" :key="t.templateId" :label="t.name" :value="t.templateId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="字段名" prop="fieldName">
+          <el-input v-model="fieldForm.fieldName" />
+        </el-form-item>
+        <el-form-item label="显示名称" prop="fieldLabel">
+          <el-input v-model="fieldForm.fieldLabel" />
+        </el-form-item>
+        <el-form-item label="类型" prop="fieldType">
+          <el-select v-model="fieldForm.fieldType">
+            <el-option label="文本" value="TEXT" />
+            <el-option label="数字" value="NUMBER" />
+            <el-option label="日期" value="DATE" />
+            <el-option label="选择" value="SELECT" />
+            <el-option label="多行文本" value="TEXTAREA" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="必填">
+          <el-switch v-model="fieldForm.required" />
+        </el-form-item>
+        <el-form-item label="默认值" prop="defaultValue">
+          <el-input v-model="fieldForm.defaultValue" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="showFieldModal = false">取消</el-button>
+        <el-button type="primary" @click="saveField()">保存</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
