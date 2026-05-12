@@ -37,7 +37,7 @@
     </el-table>
 
     <!-- 添加/编辑弹窗 -->
-    <el-dialog :title="editPcbData ? '编辑PCB' : '上传PCB设计'" :visible.sync="showAddModal">
+    <el-dialog v-model="showAddModal" :title="editPcbData ? '编辑PCB' : '上传PCB设计'">
       <el-form :model="formData" label-width="100px">
         <el-form-item label="项目">
           <el-select v-model="formData.projectId">
@@ -77,7 +77,7 @@
     </el-dialog>
 
     <!-- 预览弹窗 -->
-    <el-dialog title="PCB预览" :visible.sync="showPreviewModal" width="800px">
+    <el-dialog v-model="showPreviewModal" title="PCB预览" width="800px">
       <div class="preview-content">
         <p>文件名称: {{ previewData?.name }}</p>
         <p>文件路径: {{ previewData?.filePath }}</p>

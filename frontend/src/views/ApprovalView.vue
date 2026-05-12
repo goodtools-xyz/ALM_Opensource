@@ -50,7 +50,7 @@
     </el-tabs>
 
     <!-- 流程弹窗 -->
-    <el-dialog :title="flowForm.flowId ? '编辑流程' : '创建流程'" :visible.sync="showFlowModal" width="500px">
+    <el-dialog v-model="showFlowModal" :title="flowForm.flowId ? '编辑流程' : '创建流程'" width="500px">
       <el-form :model="flowForm" label-width="80px">
         <el-form-item label="名称" prop="name">
           <el-input v-model="flowForm.name" />
@@ -72,14 +72,14 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
+      <template #footer>
         <el-button @click="showFlowModal = false">取消</el-button>
         <el-button type="primary" @click="saveFlow()">保存</el-button>
-      </div>
+      </template>
     </el-dialog>
 
     <!-- 步骤管理弹窗 -->
-    <el-dialog title="步骤管理" :visible.sync="showStepModal" width="500px">
+    <el-dialog v-model="showStepModal" title="步骤管理" width="500px">
       <el-form :model="stepForm" label-width="80px">
         <el-form-item label="流程ID" prop="flowId">
           <el-input v-model="stepForm.flowId" disabled />
@@ -100,10 +100,10 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
+      <template #footer>
         <el-button @click="showStepModal = false">取消</el-button>
         <el-button type="primary" @click="saveStep()">保存</el-button>
-      </div>
+      </template>
     </el-dialog>
   </div>
 </template>

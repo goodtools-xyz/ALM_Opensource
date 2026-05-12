@@ -48,7 +48,7 @@
     </el-tabs>
 
     <!-- 空间弹窗 -->
-    <el-dialog :title="spaceForm.spaceId ? '编辑空间' : '创建空间'" :visible.sync="showSpaceModal" width="400px">
+    <el-dialog v-model="showSpaceModal" :title="spaceForm.spaceId ? '编辑空间' : '创建空间'" width="400px">
       <el-form :model="spaceForm" label-width="80px">
         <el-form-item label="名称" prop="name">
           <el-input v-model="spaceForm.name" />
@@ -66,14 +66,14 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
+      <template #footer>
         <el-button @click="showSpaceModal = false">取消</el-button>
         <el-button type="primary" @click="saveSpace()">保存</el-button>
-      </div>
+      </template>
     </el-dialog>
 
     <!-- 页面弹窗 -->
-    <el-dialog :title="pageForm.pageId ? '编辑页面' : '创建页面'" :visible.sync="showPageModal" width="500px">
+    <el-dialog v-model="showPageModal" :title="pageForm.pageId ? '编辑页面' : '创建页面'" width="500px">
       <el-form :model="pageForm" label-width="80px">
         <el-form-item label="所属空间" prop="spaceId">
           <el-select v-model="pageForm.spaceId">
@@ -99,10 +99,10 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
+      <template #footer>
         <el-button @click="showPageModal = false">取消</el-button>
         <el-button type="primary" @click="savePage()">保存</el-button>
-      </div>
+      </template>
     </el-dialog>
   </div>
 </template>

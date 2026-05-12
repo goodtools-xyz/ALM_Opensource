@@ -28,7 +28,7 @@
     </el-table>
 
     <!-- 添加/编辑弹窗 -->
-    <el-dialog :title="editProjectData ? '编辑项目' : '新建项目'" :visible.sync="showAddModal">
+    <el-dialog v-model="showAddModal" :title="editProjectData ? '编辑项目' : '新建项目'">
       <el-form :model="formData" label-width="100px">
         <el-form-item label="项目名称">
           <el-input v-model="formData.name" />

@@ -49,7 +49,7 @@
     </el-tabs>
 
     <!-- 模板弹窗 -->
-    <el-dialog :title="templateForm.templateId ? '编辑模板' : '创建模板'" :visible.sync="showTemplateModal" width="450px">
+    <el-dialog v-model="showTemplateModal" :title="templateForm.templateId ? '编辑模板' : '创建模板'" width="450px">
       <el-form :model="templateForm" label-width="80px">
         <el-form-item label="名称" prop="name">
           <el-input v-model="templateForm.name" />
@@ -78,14 +78,14 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
+      <template #footer>
         <el-button @click="showTemplateModal = false">取消</el-button>
         <el-button type="primary" @click="saveTemplate()">保存</el-button>
-      </div>
+      </template>
     </el-dialog>
 
     <!-- 字段弹窗 -->
-    <el-dialog :title="fieldForm.fieldId ? '编辑字段' : '添加字段'" :visible.sync="showFieldModal" width="450px">
+    <el-dialog v-model="showFieldModal" :title="fieldForm.fieldId ? '编辑字段' : '添加字段'" width="450px">
       <el-form :model="fieldForm" label-width="80px">
         <el-form-item label="所属模板" prop="templateId">
           <el-select v-model="fieldForm.templateId">
@@ -114,16 +114,16 @@
           <el-input v-model="fieldForm.defaultValue" />
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
+      <template #footer>
         <el-button @click="showFieldModal = false">取消</el-button>
         <el-button type="primary" @click="saveField()">保存</el-button>
-      </div>
+      </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, reactive } from 'vue'
 import { templateAPI } from '../api'
 
 const activeTab = ref('templates')
@@ -132,6 +132,25 @@ const fields = ref([])
 const selectedTemplate = ref('')
 const showTemplateModal = ref(false)
 const showFieldModal = ref(false)
+
+const templateForm = reactive({
+  templateId: null,
+  name: '',
+  category: 'HARDWARE',
+  projectType: 'NEW_PROJECT',
+  description: '',
+  status: 'ACTIVE'
+})
+
+const fieldForm = reactive({
+  fieldId: null,
+  templateId: '',
+  fieldName: '',
+  fieldLabel: '',
+  fieldType: 'TEXT',
+  required: false,
+  defaultValue: ''
+})
 
 const loadTemplates = async () => {
   const response = await templateAPI.getTemplates()
@@ -162,12 +181,66 @@ const manageFields = (row) => {
   activeTab.value = 'fields'
 }
 
-const editTemplate = (row) => {
+const openTemplateModal = () => {
+  templateForm.templateId = null
+  templateForm.name = ''
+  templateForm.category = 'HARDWARE'
+  templateForm.projectType = 'NEW_PROJECT'
+  templateForm.description = ''
+  templateForm.status = 'ACTIVE'
   showTemplateModal.value = true
 }
 
-const editField = (row) => {
+const editTemplate = (row) => {
+  templateForm.templateId = row.templateId
+  templateForm.name = row.name
+  templateForm.category = row.category
+  templateForm.projectType = row.projectType
+  templateForm.description = row.description
+  templateForm.status = row.status
+  showTemplateModal.value = true
+}
+
+const saveTemplate = async () => {
+  if (templateForm.templateId) {
+    await templateAPI.updateTemplate(templateForm.templateId, templateForm)
+  } else {
+    await templateAPI.createTemplate(templateForm)
+  }
+  showTemplateModal.value = false
+  loadTemplates()
+}
+
+const openFieldModal = () => {
+  fieldForm.fieldId = null
+  fieldForm.templateId = selectedTemplate.value || ''
+  fieldForm.fieldName = ''
+  fieldForm.fieldLabel = ''
+  fieldForm.fieldType = 'TEXT'
+  fieldForm.required = false
+  fieldForm.defaultValue = ''
   showFieldModal.value = true
+}
+
+const editField = (row) => {
+  fieldForm.fieldId = row.fieldId
+  fieldForm.templateId = row.templateId
+  fieldForm.fieldName = row.fieldName
+  fieldForm.fieldLabel = row.fieldLabel
+  fieldForm.fieldType = row.fieldType
+  fieldForm.required = row.required
+  fieldForm.defaultValue = row.defaultValue
+  showFieldModal.value = true
+}
+
+const saveField = async () => {
+  if (fieldForm.fieldId) {
+    await templateAPI.updateField(fieldForm.fieldId, fieldForm)
+  } else {
+    await templateAPI.createField(fieldForm)
+  }
+  showFieldModal.value = false
+  loadFields()
 }
 
 watch(selectedTemplate, () => {

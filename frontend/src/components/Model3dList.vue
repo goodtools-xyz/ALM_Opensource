@@ -36,7 +36,7 @@
     </el-table>
 
     <!-- 添加/编辑弹窗 -->
-    <el-dialog :title="editModelData ? '编辑3D模型' : '上传3D模型'" :visible.sync="showAddModal">
+    <el-dialog v-model="showAddModal" :title="editModelData ? '编辑3D模型' : '上传3D模型'">
       <el-form :model="formData" label-width="100px">
         <el-form-item label="项目">
           <el-select v-model="formData.projectId">

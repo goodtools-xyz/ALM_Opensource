@@ -65,11 +65,104 @@
         </div>
       </el-tab-pane>
     </el-tabs>
+
+    <!-- 组织弹窗 -->
+    <el-dialog v-model="showOrgModal" :title="orgForm.orgId ? '编辑组织' : '创建组织'" width="400px">
+      <el-form :model="orgForm" label-width="80px">
+        <el-form-item label="名称">
+          <el-input v-model="orgForm.name" />
+        </el-form-item>
+        <el-form-item label="编码">
+          <el-input v-model="orgForm.code" />
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="orgForm.type">
+            <el-option label="公司" value="COMPANY" />
+            <el-option label="部门" value="DEPARTMENT" />
+            <el-option label="团队" value="TEAM" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="上级组织">
+          <el-select v-model="orgForm.parentOrgId">
+            <el-option label="无" value="" />
+            <el-option v-for="o in organizations" :key="o.orgId" :label="o.name" :value="o.orgId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="orgForm.status">
+            <el-option label="启用" value="ACTIVE" />
+            <el-option label="禁用" value="INACTIVE" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showOrgModal = false">取消</el-button>
+        <el-button type="primary" @click="saveOrg()">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 员工弹窗 -->
+    <el-dialog v-model="showEmpModal" :title="empForm.empId ? '编辑员工' : '添加员工'" width="450px">
+      <el-form :model="empForm" label-width="80px">
+        <el-form-item label="姓名">
+          <el-input v-model="empForm.name" />
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="empForm.email" />
+        </el-form-item>
+        <el-form-item label="电话">
+          <el-input v-model="empForm.phone" />
+        </el-form-item>
+        <el-form-item label="职位">
+          <el-input v-model="empForm.jobTitle" />
+        </el-form-item>
+        <el-form-item label="所属组织">
+          <el-select v-model="empForm.orgId">
+            <el-option v-for="o in organizations" :key="o.orgId" :label="o.name" :value="o.orgId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="empForm.status">
+            <el-option label="在职" value="ACTIVE" />
+            <el-option label="离职" value="INACTIVE" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showEmpModal = false">取消</el-button>
+        <el-button type="primary" @click="saveEmp()">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 角色弹窗 -->
+    <el-dialog v-model="showRoleModal" :title="roleForm.roleId ? '编辑角色' : '创建角色'" width="400px">
+      <el-form :model="roleForm" label-width="80px">
+        <el-form-item label="名称">
+          <el-input v-model="roleForm.name" />
+        </el-form-item>
+        <el-form-item label="编码">
+          <el-input v-model="roleForm.code" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="roleForm.description" type="textarea" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="roleForm.status">
+            <el-option label="启用" value="ACTIVE" />
+            <el-option label="禁用" value="INACTIVE" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showRoleModal = false">取消</el-button>
+        <el-button type="primary" @click="saveRole()">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, reactive } from 'vue'
 import { organizationAPI } from '../api'
 
 const activeTab = ref('orgs')
@@ -80,6 +173,33 @@ const selectedOrg = ref('')
 const showOrgModal = ref(false)
 const showEmpModal = ref(false)
 const showRoleModal = ref(false)
+
+const orgForm = reactive({
+  orgId: null,
+  name: '',
+  code: '',
+  type: 'DEPARTMENT',
+  parentOrgId: '',
+  status: 'ACTIVE'
+})
+
+const empForm = reactive({
+  empId: null,
+  name: '',
+  email: '',
+  phone: '',
+  jobTitle: '',
+  orgId: '',
+  status: 'ACTIVE'
+})
+
+const roleForm = reactive({
+  roleId: null,
+  name: '',
+  code: '',
+  description: '',
+  status: 'ACTIVE'
+})
 
 const loadOrgs = async () => {
   const response = await organizationAPI.getOrganizations()
@@ -117,15 +237,63 @@ const deleteRole = async (id) => {
 }
 
 const editOrg = (row) => {
+  orgForm.orgId = row.orgId
+  orgForm.name = row.name
+  orgForm.code = row.code
+  orgForm.type = row.type
+  orgForm.parentOrgId = row.parentOrgId
+  orgForm.status = row.status
   showOrgModal.value = true
 }
 
+const saveOrg = async () => {
+  if (orgForm.orgId) {
+    await organizationAPI.updateOrganization(orgForm.orgId, orgForm)
+  } else {
+    await organizationAPI.createOrganization(orgForm)
+  }
+  showOrgModal.value = false
+  loadOrgs()
+}
+
 const editEmp = (row) => {
+  empForm.empId = row.empId
+  empForm.name = row.name
+  empForm.email = row.email
+  empForm.phone = row.phone
+  empForm.jobTitle = row.jobTitle
+  empForm.orgId = row.orgId
+  empForm.status = row.status
   showEmpModal.value = true
 }
 
+const saveEmp = async () => {
+  if (empForm.empId) {
+    await organizationAPI.updateEmployee(empForm.empId, empForm)
+  } else {
+    await organizationAPI.createEmployee(empForm)
+  }
+  showEmpModal.value = false
+  loadEmployees()
+}
+
 const editRole = (row) => {
+  roleForm.roleId = row.roleId
+  roleForm.name = row.name
+  roleForm.code = row.code
+  roleForm.description = row.description
+  roleForm.status = row.status
   showRoleModal.value = true
+}
+
+const saveRole = async () => {
+  if (roleForm.roleId) {
+    await organizationAPI.updateRole(roleForm.roleId, roleForm)
+  } else {
+    await organizationAPI.createRole(roleForm)
+  }
+  showRoleModal.value = false
+  loadRoles()
 }
 
 watch(selectedOrg, () => {
