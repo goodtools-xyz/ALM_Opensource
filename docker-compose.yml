@@ -1,0 +1,32 @@
+services:
+  # 后端服务
+  backend:
+    build: ./backend
+    container_name: alm-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+    ports:
+      - "8080:8080"
+    networks:
+      - alm-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/hardware/projects"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # 前端服务
+  frontend:
+    build: ./frontend
+    container_name: alm-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - alm-network
+
+networks:
+  alm-network:
+    driver: bridge
