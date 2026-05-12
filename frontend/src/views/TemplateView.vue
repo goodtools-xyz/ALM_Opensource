@@ -234,13 +234,26 @@ const editField = (row) => {
 }
 
 const saveField = async () => {
-  if (fieldForm.fieldId) {
-    await templateAPI.updateField(fieldForm.fieldId, fieldForm)
-  } else {
-    await templateAPI.createField(fieldForm)
+  if (!fieldForm.templateId) {
+    alert('请先选择所属模板')
+    return
   }
-  showFieldModal.value = false
-  loadFields()
+  if (!fieldForm.fieldName) {
+    alert('请输入字段名')
+    return
+  }
+  try {
+    if (fieldForm.fieldId) {
+      await templateAPI.updateField(fieldForm.fieldId, fieldForm)
+    } else {
+      await templateAPI.createField(fieldForm)
+    }
+    showFieldModal.value = false
+    loadFields()
+  } catch (error) {
+    console.error('保存字段失败:', error)
+    alert('保存字段失败，请检查网络连接')
+  }
 }
 
 watch(selectedTemplate, () => {

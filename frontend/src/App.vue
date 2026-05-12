@@ -1,10 +1,13 @@
-
 <template>
   <el-container style="height: 100vh;">
     <el-header class="header">
       <div class="logo">ALM系统</div>
       <div class="header-right">
-        <span>应用生命周期管理</span>
+        <span class="user-info">
+          <el-icon><component :is="icons.User" /></el-icon>
+          {{ currentUser?.username }} ({{ currentUser?.role === 'admin' ? '管理员' : '普通用户' }})
+        </span>
+        <el-button type="text" @click="handleLogout">退出登录</el-button>
       </div>
     </el-header>
     <el-container>
@@ -49,13 +52,13 @@
               <el-icon><component :is="icons.CheckSquare" /></el-icon>
               <span>审批流程</span>
             </el-menu-item>
-            <el-menu-item index="template">
+            <el-menu-item index="template" v-if="isAdmin">
               <el-icon><component :is="icons.Template" /></el-icon>
               <span>任务模板</span>
             </el-menu-item>
           </el-sub-menu>
           
-          <el-sub-menu index="management">
+          <el-sub-menu index="management" v-if="isAdmin">
             <template #title>
               <el-icon><component :is="icons.User" /></el-icon>
               <span>组织管理</span>
@@ -66,7 +69,7 @@
             </el-menu-item>
           </el-sub-menu>
           
-          <el-sub-menu index="analytics">
+          <el-sub-menu index="analytics" v-if="isAdmin">
             <template #title>
               <el-icon><component :is="icons.BarChart" /></el-icon>
               <span>数据分析</span>
@@ -86,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, markRaw, onMounted } from 'vue'
+import { ref, markRaw, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Cpu, Box, Notebook, Files, Folder, DataLine, Checked, CopyDocument, User, Briefcase, TrendCharts, PieChart, Edit } from '@element-plus/icons-vue'
 
@@ -110,13 +113,31 @@ const icons = {
 }
 
 const activeMenu = ref('hardware')
+const currentUser = ref(null)
+
+const isAdmin = computed(() => {
+  return currentUser.value?.role === 'admin'
+})
 
 const handleMenuSelect = (index) => {
   activeMenu.value = index
   router.push('/' + index)
 }
 
+const handleLogout = () => {
+  localStorage.removeItem('userInfo')
+  router.push('/login')
+}
+
+const loadUserInfo = () => {
+  const userInfo = localStorage.getItem('userInfo')
+  if (userInfo) {
+    currentUser.value = JSON.parse(userInfo)
+  }
+}
+
 onMounted(() => {
+  loadUserInfo()
   activeMenu.value = route.name || 'hardware'
 })
 </script>
@@ -143,6 +164,15 @@ onMounted(() => {
 }
 
 .header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
 }
 
