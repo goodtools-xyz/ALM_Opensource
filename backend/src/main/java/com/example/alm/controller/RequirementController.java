@@ -1,19 +1,26 @@
 package com.example.alm.controller;
 
 import com.example.alm.entity.Requirement;
+import com.example.alm.service.DocumentParseService;
 import com.example.alm.service.RequirementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/requirement")
+@RequestMapping("/requirement")
 @CrossOrigin(origins = "*")
 public class RequirementController {
 
     @Autowired
     private RequirementService requirementService;
+
+    @Autowired
+    private DocumentParseService documentParseService;
 
     @GetMapping
     public List<Requirement> getAllRequirements(
@@ -60,5 +67,50 @@ public class RequirementController {
     @GetMapping("/generate-id")
     public String generateReqId() {
         return requirementService.generateReqId();
+    }
+
+    /**
+     * 导入文档解析需求（预览模式，不保存）
+     * @param file Word或Excel文档
+     * @return 解析出的需求列表
+     */
+    @PostMapping("/import/preview")
+    public Map<String, Object> importDocumentPreview(@RequestParam("file") MultipartFile file) {
+        List<Requirement> requirements = documentParseService.parseDocument(file);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("count", requirements.size());
+        result.put("data", requirements);
+        return result;
+    }
+
+    /**
+     * 导入文档解析需求（保存模式）
+     * @param file Word或Excel文档
+     * @return 导入结果
+     */
+    @PostMapping("/import/save")
+    public Map<String, Object> importDocumentSave(@RequestParam("file") MultipartFile file) {
+        List<Requirement> requirements = documentParseService.parseDocument(file);
+        
+        int successCount = 0;
+        int failCount = 0;
+        
+        for (Requirement req : requirements) {
+            try {
+                requirementService.createRequirement(req);
+                successCount++;
+            } catch (Exception e) {
+                failCount++;
+            }
+        }
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("total", requirements.size());
+        result.put("successCount", successCount);
+        result.put("failCount", failCount);
+        return result;
     }
 }

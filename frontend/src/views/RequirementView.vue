@@ -9,6 +9,7 @@
           </template>
         </el-input>
         <el-button type="primary" @click="showCreateModal = true">新建需求</el-button>
+        <el-button type="success" @click="showImportModal = true">导入文档</el-button>
       </div>
     </div>
 
@@ -115,6 +116,58 @@
         <el-button @click="showDetailModal = false">关闭</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="showImportModal" title="导入文档" width="800px">
+      <div class="import-container">
+        <div class="upload-area">
+          <el-upload
+            class="upload-demo"
+            drag
+            :auto-upload="false"
+            :accept="'.docx,.xlsx'"
+            :on-change="handleFileChange"
+            :file-list="importFileList"
+            :limit="1"
+          >
+            <el-icon class="el-icon-upload" style="font-size: 48px; color: #ccc;"></el-icon>
+            <div class="el-upload__text">
+              拖拽文件到此处上传，或<em>点击选择文件</em>
+            </div>
+            <div class="el-upload__tip" slot="tip">
+              仅支持 .docx（Word）和 .xlsx（Excel）格式文件
+            </div>
+          </el-upload>
+        </div>
+
+        <div v-if="importPreviewData.length > 0" class="preview-area">
+          <h4>解析结果预览（共 {{ importPreviewData.length }} 条需求）</h4>
+          <el-table :data="importPreviewData" stripe size="small" max-height="300">
+            <el-table-column prop="reqId" label="需求ID" width="120" />
+            <el-table-column prop="title" label="标题" />
+            <el-table-column prop="type" label="类型" width="100">
+              <template #default="{ row }">
+                <el-tag :type="getTypeColor(row.type)" size="small">{{ getTypeName(row.type) }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="priority" label="优先级" width="100">
+              <template #default="{ row }">
+                <el-tag :type="getPriorityColor(row.priority)" size="small">{{ row.priority }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="description" label="描述" width="200" show-overflow-tooltip />
+          </el-table>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="closeImportModal">取消</el-button>
+        <el-button type="primary" :disabled="importFileList.length === 0 || importPreviewData.length === 0" @click="parseDocument">
+          解析文档
+        </el-button>
+        <el-button type="success" :disabled="importPreviewData.length === 0" @click="importDocument">
+          导入并保存
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -127,8 +180,12 @@ const searchKeyword = ref('')
 const requirements = ref([])
 const showCreateModal = ref(false)
 const showDetailModal = ref(false)
+const showImportModal = ref(false)
 const editingItem = ref(null)
 const selectedRequirement = ref(null)
+const importFileList = ref([])
+const importPreviewData = ref([])
+const currentImportFile = ref(null)
 
 const requirementForm = reactive({
   reqId: '',
@@ -228,6 +285,62 @@ const resetForm = () => {
   requirementForm.version = '1.0'
 }
 
+const handleFileChange = (file) => {
+  importFileList.value = [file]
+  currentImportFile.value = file.raw
+  importPreviewData.value = []
+}
+
+const closeImportModal = () => {
+  showImportModal.value = false
+  importFileList.value = []
+  importPreviewData.value = []
+  currentImportFile.value = null
+}
+
+const parseDocument = async () => {
+  if (!currentImportFile.value) {
+    ElMessage.warning('请先选择文件')
+    return
+  }
+  
+  try {
+    const response = await requirementAPI.importPreview(currentImportFile.value)
+    if (response.data.success) {
+      importPreviewData.value = response.data.data || []
+      ElMessage.success(`解析成功，共识别 ${response.data.count} 条需求`)
+    } else {
+      ElMessage.error('解析失败')
+    }
+  } catch (error) {
+    console.error('解析文档失败:', error)
+    ElMessage.error('解析文档失败: ' + (error.response?.data?.message || error.message))
+  }
+}
+
+const importDocument = async () => {
+  if (!currentImportFile.value) {
+    ElMessage.warning('请先选择文件')
+    return
+  }
+  
+  try {
+    const response = await requirementAPI.importSave(currentImportFile.value)
+    if (response.data.success) {
+      ElMessage.success(
+        `导入完成！共 ${response.data.total} 条，成功 ${response.data.successCount} 条，失败 ${response.data.failCount} 条`
+      )
+      closeImportModal()
+      loadRequirements()
+    } else {
+      ElMessage.error('导入失败')
+    }
+  } catch (error) {
+    console.error('导入文档失败:', error)
+    ElMessage.error('导入文档失败: ' + (error.response?.data?.message || error.message))
+  }
+}
+
 const getTypeColor = (type) => {
   const colors = { FUNCTIONAL: 'primary', NON_FUNCTIONAL: 'success', INTERFACE: 'warning', DATA: 'info' }
   return colors[type] || 'info'
@@ -282,5 +395,25 @@ onMounted(() => {
 
 .search-input {
   width: 300px;
+}
+
+.import-container {
+  padding: 10px;
+}
+
+.upload-area {
+  margin-bottom: 20px;
+}
+
+.preview-area {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.preview-area h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: bold;
 }
 </style>

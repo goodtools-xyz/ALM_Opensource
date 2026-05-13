@@ -166,7 +166,21 @@ export const requirementAPI = {
   create: (data) => api.post('/requirement', data),
   update: (id, data) => api.put(`/requirement/${id}`, data),
   delete: (id) => api.delete(`/requirement/${id}`),
-  generateId: () => api.get('/requirement/generate-id')
+  generateId: () => api.get('/requirement/generate-id'),
+  importPreview: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/requirement/import/preview', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
+  importSave: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/requirement/import/save', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
 }
 
 export const designAPI = {

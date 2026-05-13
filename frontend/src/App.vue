@@ -118,7 +118,7 @@
 <script setup>
 import { ref, markRaw, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Cpu, Box, Notebook, Files, Folder, DataLine, Checked, CopyDocument, User, Briefcase, TrendCharts, PieChart, Edit, Connection, Pencil, CheckCircle, Warning } from '@element-plus/icons-vue'
+import { Cpu, Box, Notebook, Files, Folder, DataLine, Checked, CopyDocument, User, Briefcase, TrendCharts, PieChart, Edit, Connection, EditPen, CircleCheck, Warning } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -138,8 +138,8 @@ const icons = {
   PieChart: markRaw(PieChart),
   Wrench: markRaw(Edit),
   Connection: markRaw(Connection),
-  Pencil: markRaw(Pencil),
-  CheckCircle: markRaw(CheckCircle),
+  Pencil: markRaw(EditPen),
+  CheckCircle: markRaw(CircleCheck),
   AlertCircle: markRaw(Warning)
 }
 
