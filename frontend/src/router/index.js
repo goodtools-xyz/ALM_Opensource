@@ -8,6 +8,11 @@ import ApprovalView from '../views/ApprovalView.vue'
 import OrganizationView from '../views/OrganizationView.vue'
 import StorageView from '../views/StorageView.vue'
 import TemplateView from '../views/TemplateView.vue'
+import TraceabilityView from '../views/TraceabilityView.vue'
+import RequirementView from '../views/RequirementView.vue'
+import DesignView from '../views/DesignView.vue'
+import TestCaseView from '../views/TestCaseView.vue'
+import DefectView from '../views/DefectView.vue'
 
 const routes = [
   {
@@ -66,6 +71,36 @@ const routes = [
     name: 'template',
     component: TemplateView,
     meta: { requiresAuth: true, adminOnly: true }
+  },
+  {
+    path: '/traceability',
+    name: 'traceability',
+    component: TraceabilityView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/requirement',
+    name: 'requirement',
+    component: RequirementView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/design',
+    name: 'design',
+    component: DesignView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/testcase',
+    name: 'testcase',
+    component: TestCaseView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/defect',
+    name: 'defect',
+    component: DefectView,
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -74,24 +109,20 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫
 router.beforeEach((to, from, next) => {
   const userInfo = localStorage.getItem('userInfo')
   const isLoggedIn = !!userInfo
-  
-  // 如果需要登录且未登录，跳转到登录页
+
   if (to.meta.requiresAuth && !isLoggedIn) {
     next('/login')
     return
   }
-  
-  // 如果已登录且访问登录页，跳转到首页
+
   if (to.path === '/login' && isLoggedIn) {
     next('/hardware')
     return
   }
-  
-  // 如果需要管理员权限但当前用户不是管理员
+
   if (to.meta.adminOnly && isLoggedIn) {
     const user = JSON.parse(userInfo)
     if (user.role !== 'admin') {
@@ -100,7 +131,7 @@ router.beforeEach((to, from, next) => {
       return
     }
   }
-  
+
   next()
 })
 

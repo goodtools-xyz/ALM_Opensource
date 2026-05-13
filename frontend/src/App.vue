@@ -27,7 +27,30 @@
               <span>结构设计管理</span>
             </el-menu-item>
           </el-sub-menu>
-          
+
+          <el-sub-menu index="rd-management">
+            <template #title>
+              <el-icon><component :is="icons.BookOpen" /></el-icon>
+              <span>研发管理</span>
+            </template>
+            <el-menu-item index="requirement">
+              <el-icon><component :is="icons.FileText" /></el-icon>
+              <span>需求管理</span>
+            </el-menu-item>
+            <el-menu-item index="design">
+              <el-icon><component :is="icons.Pencil" /></el-icon>
+              <span>设计管理</span>
+            </el-menu-item>
+            <el-menu-item index="testcase">
+              <el-icon><component :is="icons.CheckCircle" /></el-icon>
+              <span>测试用例</span>
+            </el-menu-item>
+            <el-menu-item index="defect">
+              <el-icon><component :is="icons.AlertCircle" /></el-icon>
+              <span>缺陷管理</span>
+            </el-menu-item>
+          </el-sub-menu>
+
           <el-sub-menu index="knowledge-group">
             <template #title>
               <el-icon><component :is="icons.BookOpen" /></el-icon>
@@ -42,7 +65,7 @@
               <span>文档管理</span>
             </el-menu-item>
           </el-sub-menu>
-          
+
           <el-sub-menu index="workflow">
             <template #title>
               <el-icon><component :is="icons.FlowChart" /></el-icon>
@@ -52,12 +75,16 @@
               <el-icon><component :is="icons.CheckSquare" /></el-icon>
               <span>审批流程</span>
             </el-menu-item>
+            <el-menu-item index="traceability">
+              <el-icon><component :is="icons.Connection" /></el-icon>
+              <span>双向追溯</span>
+            </el-menu-item>
             <el-menu-item index="template" v-if="isAdmin">
               <el-icon><component :is="icons.Template" /></el-icon>
               <span>任务模板</span>
             </el-menu-item>
           </el-sub-menu>
-          
+
           <el-sub-menu index="management" v-if="isAdmin">
             <template #title>
               <el-icon><component :is="icons.User" /></el-icon>
@@ -68,7 +95,7 @@
               <span>组织架构</span>
             </el-menu-item>
           </el-sub-menu>
-          
+
           <el-sub-menu index="analytics" v-if="isAdmin">
             <template #title>
               <el-icon><component :is="icons.BarChart" /></el-icon>
@@ -91,7 +118,7 @@
 <script setup>
 import { ref, markRaw, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Cpu, Box, Notebook, Files, Folder, DataLine, Checked, CopyDocument, User, Briefcase, TrendCharts, PieChart, Edit } from '@element-plus/icons-vue'
+import { Cpu, Box, Notebook, Files, Folder, DataLine, Checked, CopyDocument, User, Briefcase, TrendCharts, PieChart, Edit, Connection, Pencil, CheckCircle, Warning } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -109,7 +136,11 @@ const icons = {
   Building: markRaw(Briefcase),
   BarChart: markRaw(TrendCharts),
   PieChart: markRaw(PieChart),
-  Wrench: markRaw(Edit)
+  Wrench: markRaw(Edit),
+  Connection: markRaw(Connection),
+  Pencil: markRaw(Pencil),
+  CheckCircle: markRaw(CheckCircle),
+  AlertCircle: markRaw(Warning)
 }
 
 const activeMenu = ref('hardware')
@@ -132,7 +163,11 @@ const handleLogout = () => {
 const loadUserInfo = () => {
   const userInfo = localStorage.getItem('userInfo')
   if (userInfo) {
-    currentUser.value = JSON.parse(userInfo)
+    try {
+      currentUser.value = JSON.parse(userInfo)
+    } catch (e) {
+      console.error('解析用户信息失败:', e)
+    }
   }
 }
 
