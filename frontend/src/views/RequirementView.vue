@@ -160,9 +160,9 @@
       </div>
       <template #footer>
         <el-button @click="closeImportModal">取消</el-button>
-        <el-button type="primary" :disabled="importFileList.length === 0 || importPreviewData.length === 0" @click="parseDocument">
+        <el-button type="primary" :disabled="importFileList.length === 0" @click="parseDocument">
           解析文档
-        </el-button>
+          </el-button>
         <el-button type="success" :disabled="importPreviewData.length === 0" @click="importDocument">
           导入并保存
         </el-button>

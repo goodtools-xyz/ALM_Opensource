@@ -244,6 +244,9 @@ public class DocumentParseServiceImpl implements DocumentParseService {
         Requirement currentReq = null;
         StringBuilder description = new StringBuilder();
         
+        // 获取当前数据库中的需求数量，用于生成唯一ID
+        long baseCount = requirementService.getRequirementsCount();
+        
         for (String line : lines) {
             line = line.trim();
             if (line.isEmpty()) continue;
@@ -261,7 +264,8 @@ public class DocumentParseServiceImpl implements DocumentParseService {
                 currentReq = new Requirement();
                 String title = titleMatcher.group(2) != null ? titleMatcher.group(2) : titleMatcher.group(3);
                 currentReq.setTitle(title.trim());
-                currentReq.setReqId(requirementService.generateReqId());
+                // 使用递增计数器生成唯一ID，避免重复
+                currentReq.setReqId(String.format("REQ-%04d", baseCount + requirements.size() + 1));
                 currentReq.setType("FUNCTIONAL");
                 currentReq.setPriority("MEDIUM");
                 currentReq.setStatus("PENDING");

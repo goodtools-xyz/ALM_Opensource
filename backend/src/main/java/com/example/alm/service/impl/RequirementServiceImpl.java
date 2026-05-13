@@ -87,4 +87,9 @@ public class RequirementServiceImpl implements RequirementService {
         long count = requirementRepository.count() + 1;
         return String.format("REQ-%04d", count);
     }
+
+    @Override
+    public long getRequirementsCount() {
+        return requirementRepository.count();
+    }
 }

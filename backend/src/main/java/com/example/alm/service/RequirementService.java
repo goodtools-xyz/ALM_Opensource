@@ -25,4 +25,6 @@ public interface RequirementService {
     List<Requirement> searchRequirements(String keyword);
 
     String generateReqId();
+
+    long getRequirementsCount();
 }
