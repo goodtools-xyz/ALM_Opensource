@@ -26,6 +26,8 @@ public interface FileStorageService {
     
     FileStorage uploadFile(MultipartFile file, String folderId, String createdBy);
     
+    List<FileStorage> uploadFiles(MultipartFile[] files, String folderId, String createdBy);
+    
     List<FileAuditTrail> getFileAuditTrail(String fileId);
     void addAuditTrail(String fileId, String action, String userId, String userName, String ipAddress, String details);
 }

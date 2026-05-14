@@ -7,10 +7,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Configuration
@@ -21,77 +17,37 @@ public class DataInitializer implements CommandLineRunner {
     
     @Override
     public void run(String... args) throws Exception {
-        initProjectLibraryFolders();
+        initProjectLibraryRoot();
     }
     
-    private void initProjectLibraryFolders() {
+    private void initProjectLibraryRoot() {
         if (folderRepository.count() > 0) {
             return;
         }
         
-        Map<String, FileFolder> folderMap = new HashMap<>();
+        FileFolder projectLibraryRoot = new FileFolder();
+        projectLibraryRoot.setFolderId(generateFolderId());
+        projectLibraryRoot.setParentFolderId(null);
+        projectLibraryRoot.setName("项目资料库");
+        projectLibraryRoot.setPath("/项目资料库");
+        projectLibraryRoot.setDescription("项目资料库根目录 - 所有项目文件夹存放于此");
+        projectLibraryRoot.setCreatedBy("system");
+        projectLibraryRoot.setCreatedAt(LocalDateTime.now());
+        projectLibraryRoot.setUpdatedAt(LocalDateTime.now());
+        folderRepository.save(projectLibraryRoot);
         
-        String[] level1Dirs = {
-            "项目管理",
-            "客户需求管理",
-            "产品设计和开发",
-            "过程设计和开发",
-            "项目质量",
-            "供应商管理",
-            "物流管理"
-        };
+        FileFolder productLibraryRoot = new FileFolder();
+        productLibraryRoot.setFolderId(generateFolderId());
+        productLibraryRoot.setParentFolderId(null);
+        productLibraryRoot.setName("产品库");
+        productLibraryRoot.setPath("/产品库");
+        productLibraryRoot.setDescription("产品库根目录 - 所有产品文档存放于此");
+        productLibraryRoot.setCreatedBy("system");
+        productLibraryRoot.setCreatedAt(LocalDateTime.now());
+        productLibraryRoot.setUpdatedAt(LocalDateTime.now());
+        folderRepository.save(productLibraryRoot);
         
-        Map<String, String[]> level2Dirs = Map.of(
-            "产品设计和开发", new String[]{
-                "系统需求",
-                "系统设计",
-                "软件需求",
-                "软件系统设计",
-                "软件详细设计",
-                "软件单元测试",
-                "软件集成测试",
-                "软件合格性测试",
-                "系统集成测试",
-                "系统合格性测试",
-                "软件发布",
-                "硬件设计",
-                "结构设计",
-                "光学设计",
-                "机器学习",
-                "外包供应商管理",
-                "配置管理",
-                "研发质量管理"
-            }
-        );
-        
-        for (String level1Dir : level1Dirs) {
-            FileFolder level1Folder = createFolder(null, level1Dir, "/" + level1Dir);
-            folderMap.put(level1Dir, level1Folder);
-        }
-        
-        for (Map.Entry<String, String[]> entry : level2Dirs.entrySet()) {
-            FileFolder parentFolder = folderMap.get(entry.getKey());
-            if (parentFolder != null) {
-                for (String level2Dir : entry.getValue()) {
-                    createFolder(parentFolder.getFolderId(), level2Dir, parentFolder.getPath() + "/" + level2Dir);
-                }
-            }
-        }
-        
-        System.out.println("项目资料库目录结构初始化完成！");
-    }
-    
-    private FileFolder createFolder(String parentFolderId, String name, String path) {
-        FileFolder folder = new FileFolder();
-        folder.setFolderId(generateFolderId());
-        folder.setParentFolderId(parentFolderId);
-        folder.setName(name);
-        folder.setPath(path);
-        folder.setDescription("A-SPICE 过程域目录");
-        folder.setCreatedBy("system");
-        folder.setCreatedAt(LocalDateTime.now());
-        folder.setUpdatedAt(LocalDateTime.now());
-        return folderRepository.save(folder);
+        System.out.println("项目资料库和产品库根目录初始化完成！");
     }
     
     private String generateFolderId() {

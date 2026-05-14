@@ -136,6 +136,11 @@ export const storageAPI = {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
   },
+  uploadFiles: (formData) => {
+    return api.post('/storage/files/uploads', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
   updateFile: (id, data) => api.put(`/storage/files/${id}`, data),
   deleteFile: (id) => api.delete(`/storage/files/${id}`),
   archiveFile: (id) => api.post(`/storage/files/${id}/archive`),
@@ -225,4 +230,14 @@ export const defectAPI = {
   delete: (id) => api.delete(`/defect/${id}`),
   resolve: (id, resolvedBy) => api.post(`/defect/${id}/resolve`, resolvedBy),
   generateId: () => api.get('/defect/generate-id')
+}
+
+export const projectAPI = {
+  getAll: () => api.get('/projects'),
+  getById: (id) => api.get(`/projects/${id}`),
+  getByCode: (code) => api.get(`/projects/code/${code}`),
+  create: (data) => api.post('/projects', data),
+  update: (id, data) => api.put(`/projects/${id}`, data),
+  delete: (id) => api.delete(`/projects/${id}`),
+  getRootFolder: (projectId) => api.get(`/projects/${projectId}/folder`)
 }

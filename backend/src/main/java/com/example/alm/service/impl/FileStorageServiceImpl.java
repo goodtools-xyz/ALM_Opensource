@@ -200,4 +200,15 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new RuntimeException("文件上传失败: " + e.getMessage(), e);
         }
     }
+    
+    @Override
+    public List<FileStorage> uploadFiles(MultipartFile[] files, String folderId, String createdBy) {
+        List<FileStorage> uploadedFiles = new java.util.ArrayList<>();
+        for (MultipartFile file : files) {
+            if (!file.isEmpty()) {
+                uploadedFiles.add(uploadFile(file, folderId, createdBy));
+            }
+        }
+        return uploadedFiles;
+    }
 }

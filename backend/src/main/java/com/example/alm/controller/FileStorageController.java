@@ -82,6 +82,15 @@ public class FileStorageController {
         return ResponseEntity.ok(uploadedFile);
     }
     
+    @PostMapping("/files/uploads")
+    public ResponseEntity<List<FileStorage>> uploadFiles(
+            @RequestParam("files") MultipartFile[] files,
+            @RequestParam("folderId") String folderId,
+            @RequestParam(value = "createdBy", defaultValue = "system") String createdBy) {
+        List<FileStorage> uploadedFiles = storageService.uploadFiles(files, folderId, createdBy);
+        return ResponseEntity.ok(uploadedFiles);
+    }
+    
     @PutMapping("/files/{fileId}")
     public ResponseEntity<FileStorage> updateFile(@PathVariable String fileId, @RequestBody FileStorage file) {
         FileStorage updated = storageService.updateFile(fileId, file);
