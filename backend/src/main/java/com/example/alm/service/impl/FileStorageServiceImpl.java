@@ -10,7 +10,12 @@ import com.example.alm.repository.FileAuditTrailRepository;
 import com.example.alm.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -152,5 +157,47 @@ public class FileStorageServiceImpl implements FileStorageService {
         audit.setDetails(details);
         audit.setCreatedAt(LocalDateTime.now());
         auditRepository.save(audit);
+    }
+    
+    @Override
+    public FileStorage uploadFile(MultipartFile file, String folderId, String createdBy) {
+        try {
+            String uploadDir = "uploads/files/";
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            
+            String originalFilename = file.getOriginalFilename();
+            String fileExtension = originalFilename != null && originalFilename.contains(".") 
+                ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
+                : "";
+            String newFilename = UUID.randomUUID().toString().replace("-", "") + fileExtension;
+            
+            Path filePath = uploadPath.resolve(newFilename);
+            Files.copy(file.getInputStream(), filePath);
+            
+            FileStorage fileStorage = new FileStorage();
+            fileStorage.setFileId(UUID.randomUUID().toString().replace("-", "").substring(0, 32));
+            fileStorage.setName(originalFilename);
+            fileStorage.setPath(filePath.toString());
+            fileStorage.setFolderId(folderId);
+            fileStorage.setFileSize(file.getSize());
+            fileStorage.setFileType(file.getContentType());
+            fileStorage.setVersion("1.0");
+            fileStorage.setControlled("Y");
+            fileStorage.setStatus("ACTIVE");
+            fileStorage.setCreatedBy(createdBy);
+            fileStorage.setCreatedAt(LocalDateTime.now());
+            fileStorage.setUpdatedAt(LocalDateTime.now());
+            
+            FileStorage saved = fileRepository.save(fileStorage);
+            
+            addAuditTrail(saved.getFileId(), "UPLOAD", createdBy, "", "", "File uploaded: " + originalFilename);
+            
+            return saved;
+        } catch (IOException e) {
+            throw new RuntimeException("文件上传失败: " + e.getMessage(), e);
+        }
     }
 }

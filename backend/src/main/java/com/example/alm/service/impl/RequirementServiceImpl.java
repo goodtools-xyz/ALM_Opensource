@@ -92,4 +92,9 @@ public class RequirementServiceImpl implements RequirementService {
     public long getRequirementsCount() {
         return requirementRepository.count();
     }
+
+    @Override
+    public List<Requirement> getRequirementsByImportId(String importId) {
+        return requirementRepository.findByImportId(importId);
+    }
 }

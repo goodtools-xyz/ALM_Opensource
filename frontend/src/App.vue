@@ -62,7 +62,15 @@
             </el-menu-item>
             <el-menu-item index="storage">
               <el-icon><component :is="icons.FolderOpen" /></el-icon>
-              <span>文档管理</span>
+              <span>受控体系文件</span>
+            </el-menu-item>
+            <el-menu-item index="project-library">
+              <el-icon><component :is="icons.Briefcase" /></el-icon>
+              <span>项目资料库</span>
+            </el-menu-item>
+            <el-menu-item index="product-library">
+              <el-icon><component :is="icons.Box" /></el-icon>
+              <span>产品库</span>
             </el-menu-item>
           </el-sub-menu>
 
@@ -134,6 +142,7 @@ const icons = {
   Template: markRaw(CopyDocument),
   User: markRaw(User),
   Building: markRaw(Briefcase),
+  Briefcase: markRaw(Briefcase),
   BarChart: markRaw(TrendCharts),
   PieChart: markRaw(PieChart),
   Wrench: markRaw(Edit),

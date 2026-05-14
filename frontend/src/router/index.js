@@ -13,6 +13,8 @@ import RequirementView from '../views/RequirementView.vue'
 import DesignView from '../views/DesignView.vue'
 import TestCaseView from '../views/TestCaseView.vue'
 import DefectView from '../views/DefectView.vue'
+import ProjectLibraryView from '../views/ProjectLibraryView.vue'
+import ProductLibraryView from '../views/ProductLibraryView.vue'
 
 const routes = [
   {
@@ -100,6 +102,18 @@ const routes = [
     path: '/defect',
     name: 'defect',
     component: DefectView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/project-library',
+    name: 'project-library',
+    component: ProjectLibraryView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/product-library',
+    name: 'product-library',
+    component: ProductLibraryView,
     meta: { requiresAuth: true }
   }
 ]

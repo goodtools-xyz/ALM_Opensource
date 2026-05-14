@@ -8,6 +8,7 @@ import com.example.alm.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -70,6 +71,15 @@ public class FileStorageController {
     @PostMapping("/files")
     public ResponseEntity<FileStorage> createFile(@RequestBody FileStorage file) {
         return ResponseEntity.ok(storageService.createFile(file));
+    }
+    
+    @PostMapping("/files/upload")
+    public ResponseEntity<FileStorage> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("folderId") String folderId,
+            @RequestParam(value = "createdBy", defaultValue = "system") String createdBy) {
+        FileStorage uploadedFile = storageService.uploadFile(file, folderId, createdBy);
+        return ResponseEntity.ok(uploadedFile);
     }
     
     @PutMapping("/files/{fileId}")

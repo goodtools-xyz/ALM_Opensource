@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -232,6 +234,202 @@ public class DocumentParseServiceImpl implements DocumentParseService {
         } else {
             throw new IllegalArgumentException("不支持的文件格式，仅支持 .docx 和 .xlsx 格式");
         }
+    }
+
+    @Override
+    public List<Requirement> parseDocument(File file) {
+        if (file == null || !file.exists()) {
+            throw new IllegalArgumentException("文件不存在");
+        }
+        
+        String filename = file.getName();
+        
+        if (filename.toLowerCase().endsWith(".docx")) {
+            return parseWordDocument(file);
+        } else if (filename.toLowerCase().endsWith(".xlsx")) {
+            return parseExcelDocument(file);
+        } else {
+            throw new IllegalArgumentException("不支持的文件格式，仅支持 .docx 和 .xlsx 格式");
+        }
+    }
+
+    /**
+     * 解析Word文档（从File对象读取）
+     */
+    private List<Requirement> parseWordDocument(File file) {
+        List<Requirement> requirements = new ArrayList<>();
+        
+        try (InputStream inputStream = new FileInputStream(file);
+             XWPFDocument document = new XWPFDocument(inputStream)) {
+            
+            StringBuilder fullText = new StringBuilder();
+            
+            // 读取所有段落
+            for (XWPFParagraph paragraph : document.getParagraphs()) {
+                String text = paragraph.getText();
+                if (text != null && !text.trim().isEmpty()) {
+                    fullText.append(text).append("\n");
+                }
+            }
+            
+            // 读取所有表格
+            for (XWPFTable table : document.getTables()) {
+                for (XWPFTableRow row : table.getRows()) {
+                    for (XWPFTableCell cell : row.getTableCells()) {
+                        String text = cell.getText();
+                        if (text != null && !text.trim().isEmpty()) {
+                            fullText.append(text).append("\t");
+                        }
+                    }
+                    fullText.append("\n");
+                }
+            }
+            
+            requirements = parseTextToRequirements(fullText.toString());
+            
+        } catch (IOException e) {
+            throw new RuntimeException("解析Word文档失败: " + e.getMessage(), e);
+        }
+        
+        return requirements;
+    }
+
+    /**
+     * 解析Excel文档（从File对象读取）
+     */
+    private List<Requirement> parseExcelDocument(File file) {
+        List<Requirement> requirements = new ArrayList<>();
+        
+        try (InputStream inputStream = new FileInputStream(file);
+             Workbook workbook = new XSSFWorkbook(inputStream)) {
+            
+            Sheet sheet = workbook.getSheetAt(0);
+            
+            // 读取表头
+            Row headerRow = sheet.getRow(0);
+            int reqIdCol = -1, titleCol = -1, typeCol = -1, priorityCol = -1, 
+                descriptionCol = -1, moduleCol = -1, ownerCol = -1;
+            
+            if (headerRow != null) {
+                for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+                    Cell cell = headerRow.getCell(i);
+                    if (cell != null) {
+                        String header = getCellValueAsString(cell).trim();
+                        if (header.contains("需求ID") || header.contains("reqId")) {
+                            reqIdCol = i;
+                        } else if (header.contains("标题") || header.contains("名称")) {
+                            titleCol = i;
+                        } else if (header.contains("类型")) {
+                            typeCol = i;
+                        } else if (header.contains("优先级")) {
+                            priorityCol = i;
+                        } else if (header.contains("描述") || header.contains("说明")) {
+                            descriptionCol = i;
+                        } else if (header.contains("模块")) {
+                            moduleCol = i;
+                        } else if (header.contains("负责人") || header.contains("owner")) {
+                            ownerCol = i;
+                        }
+                    }
+                }
+            }
+            
+            // 读取数据行
+            for (int rowNum = 1; rowNum <= sheet.getLastRowNum(); rowNum++) {
+                Row row = sheet.getRow(rowNum);
+                if (row == null) continue;
+                
+                Requirement req = new Requirement();
+                
+                // 需求ID
+                if (reqIdCol >= 0) {
+                    Cell cell = row.getCell(reqIdCol);
+                    if (cell != null) {
+                        req.setReqId(getCellValueAsString(cell).trim());
+                    }
+                } else {
+                    req.setReqId(requirementService.generateReqId());
+                }
+                
+                // 标题（必需）
+                if (titleCol >= 0) {
+                    Cell cell = row.getCell(titleCol);
+                    if (cell != null) {
+                        String title = getCellValueAsString(cell).trim();
+                        if (title.isEmpty()) continue;
+                        req.setTitle(title);
+                    } else {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+                
+                // 类型
+                if (typeCol >= 0) {
+                    Cell cell = row.getCell(typeCol);
+                    if (cell != null) {
+                        String type = getCellValueAsString(cell).trim().toUpperCase();
+                        if (!type.isEmpty()) {
+                            req.setType(mapType(type));
+                        }
+                    }
+                }
+                
+                // 优先级
+                if (priorityCol >= 0) {
+                    Cell cell = row.getCell(priorityCol);
+                    if (cell != null) {
+                        String priority = getCellValueAsString(cell).trim().toUpperCase();
+                        if (!priority.isEmpty()) {
+                            req.setPriority(mapPriority(priority));
+                        }
+                    }
+                }
+                
+                // 描述
+                if (descriptionCol >= 0) {
+                    Cell cell = row.getCell(descriptionCol);
+                    if (cell != null) {
+                        req.setDescription(getCellValueAsString(cell).trim());
+                    }
+                }
+                
+                // 模块
+                if (moduleCol >= 0) {
+                    Cell cell = row.getCell(moduleCol);
+                    if (cell != null) {
+                        req.setModule(getCellValueAsString(cell).trim());
+                    }
+                }
+                
+                // 负责人
+                if (ownerCol >= 0) {
+                    Cell cell = row.getCell(ownerCol);
+                    if (cell != null) {
+                        req.setOwner(getCellValueAsString(cell).trim());
+                    }
+                }
+                
+                // 默认值
+                if (req.getType() == null || req.getType().isEmpty()) {
+                    req.setType("FUNCTIONAL");
+                }
+                if (req.getPriority() == null || req.getPriority().isEmpty()) {
+                    req.setPriority("MEDIUM");
+                }
+                if (req.getStatus() == null || req.getStatus().isEmpty()) {
+                    req.setStatus("PENDING");
+                }
+                
+                requirements.add(req);
+            }
+            
+        } catch (IOException e) {
+            throw new RuntimeException("解析Excel文档失败: " + e.getMessage(), e);
+        }
+        
+        return requirements;
     }
 
     /**

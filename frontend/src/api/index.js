@@ -127,6 +127,15 @@ export const storageAPI = {
   getFile: (fileId) => api.get(`/storage/files/${fileId}`),
   getFilesByFolder: (folderId) => api.get(`/storage/folders/${folderId}/files`),
   createFile: (data) => api.post('/storage/files', data),
+  uploadFile: (file, folderId, createdBy) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('folderId', folderId)
+    formData.append('createdBy', createdBy)
+    return api.post('/storage/files/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
   updateFile: (id, data) => api.put(`/storage/files/${id}`, data),
   deleteFile: (id) => api.delete(`/storage/files/${id}`),
   archiveFile: (id) => api.post(`/storage/files/${id}/archive`),
@@ -180,7 +189,11 @@ export const requirementAPI = {
     return api.post('/requirement/import/save', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
-  }
+  },
+  getImportRecords: () => api.get('/requirement/import/records'),
+  getRequirementsByImportId: (importId) => api.get(`/requirement/import/${importId}`),
+  previewDocument: (importId) => api.get(`/requirement/import/${importId}/preview`),
+  downloadDocument: (importId) => `/api/requirement/import/${importId}/download`
 }
 
 export const designAPI = {

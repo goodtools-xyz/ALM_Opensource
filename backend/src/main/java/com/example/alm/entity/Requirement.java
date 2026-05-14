@@ -59,4 +59,10 @@ public class Requirement {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    /**
+     * 导入记录ID，用于追溯到原始文档
+     */
+    @Column(name = "import_id", length = 32)
+    private String importId;
 }

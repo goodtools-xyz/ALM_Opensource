@@ -27,4 +27,9 @@ public interface RequirementService {
     String generateReqId();
 
     long getRequirementsCount();
+
+    /**
+     * 根据导入记录ID查询需求
+     */
+    List<Requirement> getRequirementsByImportId(String importId);
 }

@@ -3,6 +3,7 @@ package com.example.alm.service;
 import com.example.alm.entity.Requirement;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -31,4 +32,11 @@ public interface DocumentParseService {
      * @return 解析出的需求列表
      */
     List<Requirement> parseDocument(MultipartFile file);
+
+    /**
+     * 根据文件类型自动选择解析方式（从File对象读取）
+     * @param file 文档文件
+     * @return 解析出的需求列表
+     */
+    List<Requirement> parseDocument(File file);
 }

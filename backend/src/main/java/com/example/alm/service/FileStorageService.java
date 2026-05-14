@@ -4,6 +4,7 @@ package com.example.alm.service;
 import com.example.alm.entity.FileStorage;
 import com.example.alm.entity.FileFolder;
 import com.example.alm.entity.FileAuditTrail;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,6 +23,8 @@ public interface FileStorageService {
     FileStorage updateFile(String fileId, FileStorage file);
     void deleteFile(String fileId);
     void archiveFile(String fileId);
+    
+    FileStorage uploadFile(MultipartFile file, String folderId, String createdBy);
     
     List<FileAuditTrail> getFileAuditTrail(String fileId);
     void addAuditTrail(String fileId, String action, String userId, String userName, String ipAddress, String details);

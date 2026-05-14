@@ -25,4 +25,9 @@ public interface RequirementRepository extends JpaRepository<Requirement, Long> 
     List<Requirement> findByTitleContaining(String keyword);
 
     boolean existsByReqId(String reqId);
+
+    /**
+     * 根据导入记录ID查询需求
+     */
+    List<Requirement> findByImportId(String importId);
 }
