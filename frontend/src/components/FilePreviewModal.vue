@@ -1,131 +1,99 @@
 <template>
-  <el-dialog
-    :title="fileInfo?.fileName || '文件预览'"
-    :visible.sync="visible"
-    width="90%"
-    :fullscreen="isFullscreen"
-    @close="handleClose"
-  >
-    <div v-if="!loading" class="preview-container">
-      <div class="preview-header">
-        <div class="file-info">
-          <el-icon :size="24"><Files /></el-icon>
-          <span class="file-name">{{ fileInfo?.fileName }}</span>
+  <Teleport to="body">
+    <div v-if="visible" class="modal-overlay" @click.self="handleClose">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>{{ fileInfo?.fileName || '文件预览' }}</h3>
+          <button class="close-btn" @click="handleClose">×</button>
         </div>
-        <div class="preview-actions">
-          <el-button size="small" @click="toggleFullscreen">
-            <el-icon><ZoomOut v-if="isFullscreen" /><ZoomIn v-else /></el-icon>
-          </el-button>
-          <el-button size="small" type="primary" @click="downloadFile">
-            <el-icon><Download /></el-icon>
-            下载
-          </el-button>
-        </div>
-      </div>
-
-      <div class="preview-body">
-        <div class="properties-panel" :class="{ 'collapsed': !showProperties }">
-          <div class="panel-header" @click="showProperties = !showProperties">
-            <span class="panel-title">文件属性</span>
-            <el-icon><ArrowUp v-if="showProperties" /><ArrowDown v-else /></el-icon>
-          </div>
-          <div v-if="showProperties" class="properties-content">
-            <div class="property-item">
-              <span class="property-label">文件名称</span>
-              <span class="property-value">{{ fileInfo?.fileName }}</span>
+        <div class="modal-body">
+          <div v-if="!loading">
+            <!-- Word文档预览 -->
+            <div v-if="isWordFile" class="preview-container">
+              <div ref="wordPreviewRef" class="word-preview"></div>
             </div>
-            <div class="property-item">
-              <span class="property-label">文件类型</span>
-              <span class="property-value">{{ fileTypeText }}</span>
+            
+            <!-- Excel文档预览 -->
+            <div v-else-if="isExcelFile" class="preview-container">
+              <div class="excel-preview">
+                <table v-if="excelData" class="excel-table">
+                  <thead>
+                    <tr>
+                      <th v-for="(col, index) in excelData.headers" :key="index">{{ col }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, rowIndex) in excelData.rows" :key="rowIndex">
+                      <td v-for="(cell, cellIndex) in row" :key="cellIndex">{{ cell }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div class="property-item">
-              <span class="property-label">文件大小</span>
-              <span class="property-value">{{ formatFileSize(currentFile?.fileSize) }}</span>
-            </div>
-            <div class="property-item">
-              <span class="property-label">创建时间</span>
-              <span class="property-value">{{ formatDateTime(currentFile?.createdAt) }}</span>
-            </div>
-            <div class="property-item">
-              <span class="property-label">创建人</span>
-              <span class="property-value">{{ currentFile?.createdBy || '-' }}</span>
-            </div>
-            <div class="property-item">
-              <span class="property-label">文件版本</span>
-              <span class="property-value">{{ currentFile?.version || '1.0' }}</span>
-            </div>
-            <div class="property-item">
-              <span class="property-label">受控状态</span>
-              <span class="property-value">
-                <el-tag :type="currentFile?.controlled ? 'success' : 'info'">
-                  {{ currentFile?.controlled ? '受控' : '非受控' }}
-                </el-tag>
-              </span>
-            </div>
-            <div class="property-item">
-              <span class="property-label">归档状态</span>
-              <span class="property-value">
-                <el-tag :type="currentFile?.archived ? 'warning' : 'success'">
-                  {{ currentFile?.archived ? '已归档' : '正常' }}
-                </el-tag>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="preview-panel">
-          <div v-if="previewUrl && canPreviewOnline" class="preview-content">
-            <div v-if="isOfficeFile" class="office-preview">
+            
+            <!-- PDF文件预览 -->
+            <div v-else-if="isPdfFile && fileInfo?.downloadUrl" class="preview-container">
               <iframe
-                :src="previewUrl"
+                :src="`${window.location.origin}${fileInfo.downloadUrl}`"
                 frameborder="0"
                 width="100%"
-                height="100%"
+                height="600px"
                 class="preview-iframe"
               ></iframe>
             </div>
-            <div v-else-if="isPdfFile" class="pdf-preview">
-              <embed
-                :src="previewUrl"
-                type="application/pdf"
-                width="100%"
-                height="100%"
-                class="preview-embed"
-              />
+            
+            <!-- 其他文件类型 -->
+            <div v-else class="preview-container">
+              <div class="no-preview">
+                <p class="no-preview-icon">📄</p>
+                <p>该文件类型不支持在线预览</p>
+                <button class="download-btn" @click="downloadFile">下载文件</button>
+              </div>
             </div>
-            <div v-else-if="isTextFile" class="text-preview">
-              <pre class="text-content">{{ textContent }}</pre>
+            
+            <!-- 文件属性面板 -->
+            <div class="properties-panel">
+              <h4>文件属性</h4>
+              <div class="property-item">
+                <span class="property-label">文件名:</span>
+                <span class="property-value">{{ fileInfo?.fileName }}</span>
+              </div>
+              <div class="property-item">
+                <span class="property-label">文件类型:</span>
+                <span class="property-value">{{ fileInfo?.extension?.toUpperCase() }}</span>
+              </div>
+              <div class="property-item">
+                <span class="property-label">文件大小:</span>
+                <span class="property-value">{{ formatFileSize(currentFile?.fileSize) }}</span>
+              </div>
+              <div class="property-item">
+                <span class="property-label">创建时间:</span>
+                <span class="property-value">{{ formatDateTime(currentFile?.createdAt) }}</span>
+              </div>
+              <div class="property-item">
+                <span class="property-label">创建人:</span>
+                <span class="property-value">{{ currentFile?.createdBy || '-' }}</span>
+              </div>
+              <div class="property-item">
+                <span class="property-label">文件版本:</span>
+                <span class="property-value">{{ currentFile?.version || '1.0' }}</span>
+              </div>
             </div>
           </div>
-          <div v-else class="no-preview">
-            <el-icon :size="64" class="no-preview-icon"><EditPen /></el-icon>
-            <p class="no-preview-text">该文件类型不支持在线预览</p>
-            <el-button type="primary" @click="downloadFile">
-              <el-icon><Download /></el-icon>
-              下载文件
-            </el-button>
+          <div v-else>
+            <div class="loading-container">
+              <div class="loading-spinner"></div>
+              <p>加载中...</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div v-else class="loading-container">
-      <el-spinner size="large" />
-      <p>加载中...</p>
-    </div>
-  </el-dialog>
+  </Teleport>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import {
-  Files,
-  Download,
-  ZoomIn,
-  ZoomOut,
-  ArrowUp,
-  ArrowDown,
-  EditPen
-} from '@element-plus/icons-vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { storageAPI } from '../api'
 
 const props = defineProps({
@@ -136,42 +104,22 @@ const props = defineProps({
 const emit = defineEmits(['close', 'update:visible'])
 
 const loading = ref(false)
-const showProperties = ref(true)
-const isFullscreen = ref(false)
 const fileInfo = ref(null)
 const currentFile = ref(null)
-const textContent = ref('')
+const wordPreviewRef = ref(null)
+const excelData = ref(null)
 
-const previewUrl = computed(() => fileInfo.value?.previewUrl)
-const canPreviewOnline = computed(() => fileInfo.value?.canPreviewOnline)
 const extension = computed(() => fileInfo.value?.extension || '')
 
-const isOfficeFile = computed(() => {
-  return ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(extension.value)
+const isWordFile = computed(() => {
+  return ['doc', 'docx'].includes(extension.value)
+})
+
+const isExcelFile = computed(() => {
+  return ['xls', 'xlsx'].includes(extension.value)
 })
 
 const isPdfFile = computed(() => extension.value === 'pdf')
-
-const isTextFile = computed(() => {
-  return ['txt', 'md', 'json', 'html', 'htm'].includes(extension.value)
-})
-
-const fileTypeText = computed(() => {
-  const types = {
-    'doc': 'Microsoft Word 文档',
-    'docx': 'Microsoft Word 文档',
-    'xls': 'Microsoft Excel 表格',
-    'xlsx': 'Microsoft Excel 表格',
-    'ppt': 'Microsoft PowerPoint 演示',
-    'pptx': 'Microsoft PowerPoint 演示',
-    'pdf': 'PDF 文档',
-    'txt': '文本文档',
-    'md': 'Markdown 文档',
-    'json': 'JSON 文件',
-    'html': 'HTML 文件'
-  }
-  return types[extension.value] || `${extension.value.toUpperCase()} 文件`
-})
 
 const formatFileSize = (size) => {
   if (!size) return '-'
@@ -194,31 +142,71 @@ const formatDateTime = (dateTime) => {
   })
 }
 
+const loadWordFile = async (url) => {
+  try {
+    const { default: renderAsync } = await import('docx-preview')
+    const response = await fetch(url)
+    const arrayBuffer = await response.arrayBuffer()
+    await nextTick()
+    renderAsync(arrayBuffer, wordPreviewRef.value, null, {
+      className: 'docx-preview',
+      style: { 'max-width': '100%' }
+    })
+  } catch (error) {
+    console.error('加载Word文件失败:', error)
+  }
+}
+
+const loadExcelFile = async (url) => {
+  try {
+    const { read, utils } = await import('xlsx')
+    const response = await fetch(url)
+    const arrayBuffer = await response.arrayBuffer()
+    const workbook = read(arrayBuffer, { type: 'array' })
+    const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
+    const jsonData = utils.sheet_to_json(firstSheet, { header: 1 })
+    
+    if (jsonData.length > 0) {
+      excelData.value = {
+        headers: jsonData[0],
+        rows: jsonData.slice(1)
+      }
+    }
+  } catch (error) {
+    console.error('加载Excel文件失败:', error)
+  }
+}
+
 const loadFileInfo = async () => {
   if (!props.fileId) return
   
   loading.value = true
+  excelData.value = null
+  
   try {
     const [infoRes, fileRes] = await Promise.all([
       storageAPI.getPreviewUrl(props.fileId),
       storageAPI.getFile(props.fileId)
     ])
+    
     fileInfo.value = infoRes.data
     currentFile.value = fileRes.data
     
-    if (isTextFile.value && previewUrl.value) {
-      const textRes = await fetch(previewUrl.value)
-      textContent.value = await textRes.text()
+    // 根据文件类型加载预览
+    if (fileInfo.value.downloadUrl) {
+      const fileUrl = window.location.origin + fileInfo.value.downloadUrl
+      
+      if (isWordFile.value) {
+        await loadWordFile(fileUrl)
+      } else if (isExcelFile.value) {
+        await loadExcelFile(fileUrl)
+      }
     }
   } catch (error) {
     console.error('加载文件信息失败:', error)
   } finally {
     loading.value = false
   }
-}
-
-const toggleFullscreen = () => {
-  isFullscreen.value = !isFullscreen.value
 }
 
 const downloadFile = () => {
@@ -234,7 +222,10 @@ const downloadFile = () => {
 
 const handleClose = () => {
   emit('close')
+  emit('update:visible', false)
 }
+
+onMounted(() => {})
 
 watch(() => props.visible, (newVal) => {
   if (newVal) {
@@ -250,162 +241,174 @@ watch(() => props.fileId, () => {
 </script>
 
 <style scoped>
-.preview-container {
-  display: flex;
-  flex-direction: column;
-  height: 70vh;
-}
-
-.preview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: #f5f7fa;
-  border-bottom: 1px solid #e4e7ed;
-}
-
-.file-info {
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  z-index: 9999;
 }
 
-.file-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.preview-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.preview-body {
-  display: flex;
-  flex: 1;
+.modal-container {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 1200px;
+  max-height: 90vh;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   overflow: hidden;
 }
 
-.properties-panel {
-  width: 280px;
-  border-right: 1px solid #e4e7ed;
-  background: #fafafa;
-  transition: width 0.3s;
-}
-
-.properties-panel.collapsed {
-  width: 40px;
-}
-
-.panel-header {
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #f8f9fa;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
   cursor: pointer;
-  border-bottom: 1px solid #e4e7ed;
+  color: #999;
+  padding: 0;
+  line-height: 1;
 }
 
-.panel-title {
+.close-btn:hover {
+  color: #333;
+}
+
+.modal-body {
+  padding: 20px;
+  max-height: calc(90vh - 80px);
+  overflow-y: auto;
+}
+
+.preview-container {
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: white;
+}
+
+.preview-iframe {
+  border: none;
+}
+
+.word-preview {
+  padding: 20px;
+  min-height: 400px;
+}
+
+.word-preview img {
+  max-width: 100%;
+  height: auto;
+}
+
+.excel-preview {
+  max-height: 500px;
+  overflow: auto;
+  padding: 10px;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.excel-table th,
+.excel-table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.excel-table th {
+  background-color: #f5f7fa;
   font-weight: 600;
+}
+
+.excel-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.no-preview {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+}
+
+.no-preview-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.properties-panel {
+  background-color: #fafafa;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.properties-panel h4 {
+  margin: 0 0 12px 0;
   font-size: 14px;
-}
-
-.properties-panel.collapsed .panel-title {
-  display: none;
-}
-
-.properties-content {
-  padding: 12px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
 }
 
 .property-item {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px dashed #e4e7ed;
+  border-bottom: 1px dashed #eee;
 }
 
 .property-label {
   font-size: 13px;
-  color: #606266;
+  color: #666;
 }
 
 .property-value {
   font-size: 13px;
-  color: #303133;
+  color: #333;
   text-align: right;
-  max-width: 150px;
+  max-width: 60%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.preview-panel {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.preview-content {
-  width: 100%;
-  height: 100%;
-}
-
-.office-preview {
-  width: 100%;
-  height: 100%;
-}
-
-.preview-iframe {
-  width: 100%;
-  height: 100%;
-}
-
-.pdf-preview {
-  width: 100%;
-  height: 100%;
-}
-
-.preview-embed {
-  width: 100%;
-  height: 100%;
-}
-
-.text-preview {
-  width: 100%;
-  height: 100%;
-  padding: 16px;
-  overflow: auto;
-}
-
-.text-content {
-  white-space: pre-wrap;
-  word-break: break-all;
-  font-family: monospace;
+.download-btn {
+  background-color: #409eff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
   font-size: 14px;
-  color: #303133;
-  margin: 0;
+  margin-top: 10px;
 }
 
-.no-preview {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  color: #909399;
-}
-
-.no-preview-icon {
-  color: #c0c4cc;
-}
-
-.no-preview-text {
-  font-size: 14px;
+.download-btn:hover {
+  background-color: #66b1ff;
 }
 
 .loading-container {
@@ -415,5 +418,19 @@ watch(() => props.fileId, () => {
   justify-content: center;
   padding: 50px;
   gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #409eff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

@@ -47,7 +47,7 @@
           <el-table :data="files" border style="width: 100%;">
             <el-table-column prop="name" label="文件名" min-width="200">
               <template #default="scope">
-                <span class="file-name">
+                <span class="file-name clickable" @click="viewFile(scope.row)">
                   <el-icon :size="18"><Files /></el-icon>
                   {{ scope.row.name }}
                 </span>
@@ -170,8 +170,9 @@
 
     <!-- 文件预览弹窗 -->
     <FilePreviewModal
-      :visible.sync="showPreviewModal"
+      :visible="showPreviewModal"
       :file-id="previewFileId"
+      @update:visible="showPreviewModal = $event"
       @close="handlePreviewClose"
     />
   </div>
@@ -620,6 +621,16 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.file-name.clickable {
+  cursor: pointer;
+  color: #409eff;
+}
+
+.file-name.clickable:hover {
+  color: #66b1ff;
+  text-decoration: underline;
 }
 
 .empty-state, .empty-hint {
