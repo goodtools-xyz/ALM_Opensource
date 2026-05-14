@@ -167,6 +167,13 @@
         <el-button type="primary" @click="handleUpload()" :loading="uploading">上传</el-button>
       </template>
     </el-dialog>
+
+    <!-- 文件预览弹窗 -->
+    <FilePreviewModal
+      :visible.sync="showPreviewModal"
+      :file-id="previewFileId"
+      @close="handlePreviewClose"
+    />
   </div>
 </template>
 
@@ -194,6 +201,7 @@ import {
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { storageAPI, projectAPI } from '../api'
+import FilePreviewModal from '../components/FilePreviewModal.vue'
 
 const folderTree = ref([])
 const showFolderModal = ref(false)
@@ -205,6 +213,8 @@ const uploading = ref(false)
 const uploadFiles = ref([])
 const currentFolderId = ref('')
 const currentFolderName = ref('')
+const showPreviewModal = ref(false)
+const previewFileId = ref('')
 
 const defaultProps = {
   children: 'children',
@@ -472,7 +482,13 @@ const formatFileSize = (bytes) => {
 }
 
 const viewFile = (file) => {
-  ElMessage.info(`查看文件: ${file.name}`)
+  previewFileId.value = file.fileId
+  showPreviewModal.value = true
+}
+
+const handlePreviewClose = () => {
+  showPreviewModal.value = false
+  previewFileId.value = ''
 }
 
 const archiveFile = async (fileId) => {

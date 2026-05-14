@@ -6,11 +6,20 @@ import com.example.alm.entity.FileFolder;
 import com.example.alm.entity.FileAuditTrail;
 import com.example.alm.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/storage")
@@ -112,5 +121,69 @@ public class FileStorageController {
     @GetMapping("/files/{fileId}/audit")
     public ResponseEntity<List<FileAuditTrail>> getFileAuditTrail(@PathVariable String fileId) {
         return ResponseEntity.ok(storageService.getFileAuditTrail(fileId));
+    }
+    
+    @GetMapping("/files/{fileId}/download")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String fileId) {
+        FileStorage file = storageService.getFileById(fileId);
+        if (file == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        FileSystemResource resource = new FileSystemResource(file.getPath());
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        String filename = URLEncoder.encode(file.getName(), StandardCharsets.UTF_8).replace("+", "%20");
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(resource);
+    }
+    
+    @GetMapping("/files/{fileId}/preview-url")
+    public ResponseEntity<Map<String, Object>> getPreviewUrl(@PathVariable String fileId) {
+        FileStorage file = storageService.getFileById(fileId);
+        if (file == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        String filename = file.getName();
+        String extension = filename != null && filename.contains(".") 
+            ? filename.substring(filename.lastIndexOf(".") + 1).toLowerCase() 
+            : "";
+        
+        boolean canPreviewOnline = isPreviewableFormat(extension);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("fileId", fileId);
+        result.put("fileName", filename);
+        result.put("extension", extension);
+        result.put("canPreviewOnline", canPreviewOnline);
+        result.put("downloadUrl", "/api/storage/files/" + fileId + "/download");
+        
+        if (canPreviewOnline) {
+            String previewUrl = generatePreviewUrl(fileId, extension);
+            result.put("previewUrl", previewUrl);
+        }
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    private boolean isPreviewableFormat(String extension) {
+        return List.of("doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf", "txt", "html", "htm", "md", "json").contains(extension);
+    }
+    
+    private String generatePreviewUrl(String fileId, String extension) {
+        if (List.of("doc", "docx", "xls", "xlsx", "ppt", "pptx").contains(extension)) {
+            return "https://view.officeapps.live.com/op/embed.aspx?src=" + 
+                   URLEncoder.encode("http://localhost:8081/api/storage/files/" + fileId + "/download", StandardCharsets.UTF_8);
+        }
+        if (extension.equals("pdf")) {
+            return "/api/storage/files/" + fileId + "/download";
+        }
+        return "/api/storage/files/" + fileId + "/download";
     }
 }

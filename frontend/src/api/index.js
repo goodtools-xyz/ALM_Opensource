@@ -145,7 +145,9 @@ export const storageAPI = {
   deleteFile: (id) => api.delete(`/storage/files/${id}`),
   archiveFile: (id) => api.post(`/storage/files/${id}/archive`),
 
-  getFileAudit: (fileId) => api.get(`/storage/files/${fileId}/audit`)
+  getFileAudit: (fileId) => api.get(`/storage/files/${fileId}/audit`),
+  getPreviewUrl: (fileId) => api.get(`/storage/files/${fileId}/preview-url`),
+  downloadFile: (fileId) => `/api/storage/files/${fileId}/download`
 }
 
 export const templateAPI = {
